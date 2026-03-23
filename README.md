@@ -16,3 +16,6 @@ FSB4inspector is a Python utility library for inspecting, analyzing, and manipul
 - [ ] Create multiple directory entries
 - [ ] Create SYNC header
 - [ ] Create syncpoints
+
+
+### Note: This was designed for LittleBigPlanet, it should work with non-LittleBigPlanet FSB4 files, but YMMV.
