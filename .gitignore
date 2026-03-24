@@ -1,2 +1,5 @@
+unit_tests/
+reference_scripts/
 .venv/
 *.fsb
+*.mp3
