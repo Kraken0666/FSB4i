@@ -6,9 +6,9 @@ FSB4inspector is a Python utility library for inspecting, analyzing, and manipul
 ### Parse FSB4
 - [x] Parse FSB4 header  
 - [x] Parse directory entries
-- [ ] Parse multiple directory entries
-- [ ] Parse SYNC header
-- [ ] Extract syncpoints sample offset
+- [x] Parse multiple directory entries
+- [x] Parse SYNC header
+- [x] Extract syncpoints sample offset + sample time marker
 
 ### Create FSB4
 - [ ] Create FSB4 header
@@ -16,6 +16,11 @@ FSB4inspector is a Python utility library for inspecting, analyzing, and manipul
 - [ ] Create multiple directory entries
 - [ ] Create SYNC header
 - [ ] Create syncpoints
+
+### Tested with:
+- a_fifth_of_beethoven.fsb (LBP2)
+- i_english_g.fsb (LBP1) (Non-standard syncpoints)
+- i_english_s.fsb (LBP1)
 
 
 ### Note: This was designed for LittleBigPlanet, it should work with non-LittleBigPlanet FSB4 files, but YMMV.
