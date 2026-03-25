@@ -1,76 +1,12 @@
 import struct
 import uuid
-from dataclasses import dataclass
+from structs.fsb4 import FSB4Header, FSB4DirectoryEntry
+from config.constants import FSB4_HEADER_FORMAT, FSB4_HEADER_SIZE
+from config.flags import FSOUND_FLAGS, FMOD_FSB_HEADER
 
 ''' More information on the format can be found at
 https://wiki.imagisphere.me/Filetype:FMOD_Soundbank
 '''
-
-FSB4_HEADER_FORMAT = "<4s5IQ16s"
-FSB4_HEADER_SIZE = struct.calcsize(FSB4_HEADER_FORMAT)
-
-FMOD_PLAY_FLAGS = {
-    0x00000001: "FMOD_LOOP_OFF",
-    0x00000002: "FMOD_LOOP_NORMAL",
-    0x00000004: "FMOD_LOOP_BIDI",
-    0x00000008: "FMOD_2D",
-    0x00000010: "FMOD_3D",
-    0x00000080: "FMOD_CREATESTREAM",
-    0x00000100: "FMOD_CREATESAMPLE",
-    0x00000200: "FMOD_CREATECOMPRESSEDSAMPLE",
-    0x00000400: "FMOD_OPENUSER",
-    0x00000800: "FMOD_OPENMEMORY",
-    0x00001000: "FMOD_OPENRAW",
-    0x00002000: "FMOD_OPENONLY",
-    0x00004000: "FMOD_ACCURATETIME",
-    0x00008000: "FMOD_MPEGSEARCH",
-    0x00010000: "FMOD_NONBLOCKING",
-    0x00020000: "FMOD_UNIQUE",
-    0x00040000: "FMOD_3D_HEADRELATIVE",
-    0x00080000: "FMOD_3D_WORLDRELATIVE",
-    0x00100000: "FMOD_3D_INVERSEROLLOFF",
-    0x00200000: "FMOD_3D_LINEARROLLOFF",
-    0x00400000: "FMOD_3D_LINEARSQUAREROLLOFF",
-    0x00800000: "FMOD_3D_INVERSETAPEREDROLLOFF",
-    0x02000000: "FMOD_IGNORETAGS",
-    0x04000000: "FMOD_3D_CUSTOMROLLOFF",
-    0x08000000: "FMOD_LOWMEM",
-    0x10000000: "FMOD_OPENMEMORY_POINT",
-    0x20000000: "FMOD_LOADSECONDARYRAM",
-    0x40000000: "FMOD_3D_IGNOREGEOMETRY",
-    0x80000000: "FMOD_VIRTUAL_PLAYFROMSTART",}
-
-
-@dataclass(frozen=True)
-class FSB4Header:
-    magic: str
-    num_files: int
-    dir_len: int
-    dat_len: int
-    version: int
-    flags: int
-    reserved: int
-    bank_uuid: bytes
-
-@dataclass(frozen=True)
-class FSB4DirectoryEntry:
-    entry_len: int
-    filename: str
-    sample_len: int
-    compressed_len: int
-    loop_start: int
-    loop_end: int
-    play_mode: int
-    sample_rate: int
-    bank_volume: int
-    pan: int
-    playback_priority: int
-    num_channels: int
-    min_distance: int
-    max_distance: int
-    var_freq: int
-    var_vol: int
-    var_pan: int
 
 class FSB4Data(object):
     
@@ -80,8 +16,9 @@ class FSB4Data(object):
         self.header: FSB4Header | None = None
         self.directory: list[FSB4DirectoryEntry] = []
     
-    def decode_fmod_play_flags(self, value: int):
-        return [name for bit, name in FMOD_PLAY_FLAGS.items() if value & bit]
+    def decode_FSOUND_FLAGS(self, value: int):
+        flags_set = FSOUND_FLAGS(value)
+        return [flag.name for flag in FSOUND_FLAGS if flag in flags_set]
 
     def extract_fsb4_header(self):
         print(f"[+] Opening file: {self.filename}")
@@ -105,13 +42,18 @@ class FSB4Data(object):
                 bank_uuid=unpacked[7],
                 )
 
+ 
+            flags_set = FMOD_FSB_HEADER(header.flags)
+            readable_flags = [flag.name for flag in FMOD_FSB_HEADER if flag in flags_set]
+
             print("[+] Parsed FSB4Header:")
             print(f"        Magic:       {header.magic}")
             print(f"        Num Files:   {header.num_files}")
             print(f"        Dir Length:  {header.dir_len}")
             print(f"        Data Length: {header.dat_len}")
             print(f"        Version:     {header.version}")
-            print(f"        Flags:       0x{header.flags:08X}")
+            print(f"        Flags (RAW): 0x{header.flags:08X}")
+            print(f"        Flags (Readable): {readable_flags}")
             print(f"        Bank UUID:   {uuid.UUID(bytes=header.bank_uuid)}")
 
 
@@ -170,13 +112,13 @@ class FSB4Data(object):
 
                 self.directory.append(entry)
 
-                flags = self.decode_fmod_play_flags(entry.play_mode)
+                flags = self.decode_FSOUND_FLAGS(entry.play_mode)
                 print(f"        Filename: {entry.filename}")
                 print(f"        Sample length: {entry.sample_len}")
                 print(f"        Compressed length: {entry.compressed_len}")
                 print(f"        Loop start: {entry.loop_start}")
                 print(f"        Loop end: {entry.loop_end}")
-                print(f"        Play mode (Bitmask): 0x{entry.play_mode:08X}")
+                print(f"        Play mode (RAW): 0x{entry.play_mode:08X}")
                 print(f"        Play mode (Readable): {flags}")
                 print(f"        Sample rate: {entry.sample_rate}")
                 print(f"        Bank volume: {entry.bank_volume}")
@@ -221,9 +163,8 @@ class FSB4Data(object):
                 seconds = int(time_sec % 60)
                 millis = int((time_sec - int(time_sec)) * 1000)
 
-                print(f"[+] Startpoint {i}: {label}")
-                print(f"        Sample Position: {startpoint_samples}")
-                print(f"        Time: {minutes}:{seconds:02d}.{millis:03d}")
+                
+                print(f"[{i}]   Frame: {startpoint_samples} ({minutes}:{seconds:02d}.{millis:03d})")
 
                 startpoints.append({
                     "label": label,
@@ -235,9 +176,9 @@ class FSB4Data(object):
 if __name__ == "__main__":
     from sys import argv
 
-    fsb = FSB4Data("a_fifth_of_beethoven.fsb") #Testing file
+    fsb = FSB4Data("tests/a_fifth_of_beethoven.fsb") #Testing file
 
 
     fsb.extract_fsb4_header()
-    fsb.extract_directory()
-    fsb.extract_fsb4_syncpoints()
+    # fsb.extract_directory()
+    # fsb.extract_fsb4_syncpoints()

@@ -1,5 +1,9 @@
-unit_tests/
+inputs/
 reference_scripts/
+tests/
 .venv/
 *.fsb
 *.mp3
+__pycache__/
+**/__pycache__/
+*.py[cod]

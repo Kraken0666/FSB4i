@@ -1,0 +1,4 @@
+import struct
+
+FSB4_HEADER_FORMAT = "<4s5IQ16s"
+FSB4_HEADER_SIZE = struct.calcsize(FSB4_HEADER_FORMAT)
