@@ -1,5 +1,5 @@
-# FSB4inspector (FSB4i)
-FSB4inspector is a Python utility library for inspecting, analyzing, and manipulating FMOD SoundBank V4 (FSB4) files. The library is designed to simplify common workflows with FSB4 files, reducing repetitive and time-consuming tasks for developers and audio engineers.
+# fsb4_lib
+fsb4_lib is a library for inspecting, analyzing, and manipulating FMOD SoundBank V4 (FSB4) files. The library is designed to simplify common workflows with FSB4 files, reducing repetitive and time-consuming tasks for developers.
 ## Roadmap
 ### Parse FSB4
 #### Information

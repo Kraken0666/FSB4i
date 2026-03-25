@@ -1,8 +1,9 @@
 import struct
 import uuid
-from structs.fsb4 import FSB4Header, FSB4DirectoryEntry
-from config.constants import FSB4_HEADER_FORMAT, FSB4_HEADER_SIZE
-from config.flags import FSOUND_FLAGS, FMOD_FSB_HEADER
+from .fsb4_structs import FSB4Header, FSB4DirectoryEntry
+from .fsb4_constants import FSB4_HEADER_FORMAT, FSB4_HEADER_SIZE
+from .fsb4_flags import FSOUND_FLAGS, FMOD_FSB_HEADER
+from .fsb4_helpers import decode_FSOUND_FLAGS, format_time
 
 ''' More information on the format can be found at
 https://wiki.imagisphere.me/Filetype:FMOD_Soundbank
@@ -16,10 +17,6 @@ class FSB4Data(object):
         self.header: FSB4Header | None = None
         self.directory: list[FSB4DirectoryEntry] = []
     
-    def decode_FSOUND_FLAGS(self, value: int):
-        flags_set = FSOUND_FLAGS(value)
-        return [flag.name for flag in FSOUND_FLAGS if flag in flags_set]
-
     def extract_fsb4_header(self):
         print(f"[+] Opening file: {self.filename}")
         with open(self.filename, 'rb') as f:
@@ -42,7 +39,6 @@ class FSB4Data(object):
                 bank_uuid=unpacked[7],
                 )
 
- 
             flags_set = FMOD_FSB_HEADER(header.flags)
             readable_flags = [flag.name for flag in FMOD_FSB_HEADER if flag in flags_set]
 
@@ -112,7 +108,7 @@ class FSB4Data(object):
 
                 self.directory.append(entry)
 
-                flags = self.decode_FSOUND_FLAGS(entry.play_mode)
+                flags = decode_FSOUND_FLAGS(entry.play_mode)
                 print(f"        Filename: {entry.filename}")
                 print(f"        Sample length: {entry.sample_len}")
                 print(f"        Compressed length: {entry.compressed_len}")
@@ -156,14 +152,7 @@ class FSB4Data(object):
 
                 startpoint_samples, label_bytes, _padding = struct.unpack("<I10s246s", entry_bytes)
                 label = label_bytes.decode("ascii").rstrip("\x00")
-
-                # Convert samples to seconds
-                time_sec = startpoint_samples / sample_rate
-                minutes = int(time_sec // 60)
-                seconds = int(time_sec % 60)
-                millis = int((time_sec - int(time_sec)) * 1000)
-
-                
+                minutes, seconds, millis, time_sec = format_time(startpoint_samples)
                 print(f"[{i}]   Frame: {startpoint_samples} ({minutes}:{seconds:02d}.{millis:03d})")
 
                 startpoints.append({
