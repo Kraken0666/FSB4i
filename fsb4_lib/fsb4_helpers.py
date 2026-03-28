@@ -1,10 +1,16 @@
-from .fsb4_flags import FSOUND_FLAGS
+from .fsb4_flags import FSOUND_FLAGS, FMOD_FSB_HEADER
 
 
-def decode_FSOUND_FLAGS(value: int):
-    """Return list of FSOUND_FLAGS names set in value."""
-    flags_set = FSOUND_FLAGS(value)
-    return [flag.name for flag in FSOUND_FLAGS if flag in flags_set]
+def decode_flags(value: int, flag_type: str = "sound"):
+    if flag_type == "header":
+        enum_cls = FMOD_FSB_HEADER
+    elif flag_type == "sound":
+        enum_cls = FSOUND_FLAGS
+    else:
+        raise ValueError(f"Unknown flag_type: {flag_type}")
+
+    flags_set = enum_cls(value)
+    return [flag.name for flag in enum_cls if flag in flags_set]
 
 
 def format_time(samples: int, sample_rate: int, formatted: bool = True):
